@@ -1,0 +1,62 @@
+/** @format */
+
+import {
+  SignUpRequest,
+  SignInRequest,
+  AuthApiResponse,
+  UserProfileResponse,
+} from "@/types/api";
+import { api } from "@/lib/api";
+import { mockApi, USE_MOCKS } from "@/mocks/reports";
+
+export async function signUpUser(
+  userData: SignUpRequest
+): Promise<AuthApiResponse> {
+  try {
+    // The API sets an httpOnly session cookie, so there's no token to store here.
+    const response = await api.post("/auth/signup", userData);
+    return response.data as AuthApiResponse;
+  } catch (error) {
+    console.error("Sign up error:", error);
+    throw error;
+  }
+}
+
+export async function signInUser(
+  credentials: SignInRequest
+): Promise<AuthApiResponse> {
+  try {
+    const response = await api.post("/auth/signin", credentials);
+
+    // Token is set as HTTP-only cookie automatically by backend
+    return response.data as AuthApiResponse;
+  } catch (error) {
+    console.error("Sign in error:", error);
+    throw error;
+  }
+}
+
+export async function getUserProfile(): Promise<UserProfileResponse> {
+  if (USE_MOCKS) {
+    return { success: true, data: await mockApi.getProfile(), timestamp: new Date().toISOString() };
+  }
+  try {
+    const response = await api.get("/auth/profile");
+    return response.data as UserProfileResponse;
+  } catch (error) {
+    console.error("Get profile error:", error);
+    throw error;
+  }
+}
+
+export async function signOutUser(): Promise<void> {
+  try {
+    // Clear local storage
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("auth_token");
+    }
+  } catch (error) {
+    console.error("Sign out error:", error);
+    throw error;
+  }
+}

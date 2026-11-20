@@ -1,0 +1,139 @@
+/** @format */
+
+import { RequestHandler } from "express";
+import { verifyToken, extractTokenFromHeader } from "../utils/jwt";
+import { authService } from "../services/auth.service";
+
+export const authMiddleware: RequestHandler = async (req, res, next) => {
+  try {
+    // Try to get token from cookie first, then from Authorization header
+    let token: string | undefined;
+
+    if (req.cookies.token) {
+      token = req.cookies.token;
+    } else if (req.headers.authorization) {
+      // Extract token from "Bearer <token>" format
+      const authHeader = req.headers.authorization;
+      if (authHeader.startsWith("Bearer ")) {
+        token = authHeader.substring(7); // Remove "Bearer " prefix
+      }
+    }
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Access token is required",
+      });
+    }
+
+    const payload = verifyToken(token);
+
+    if (!payload) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid or expired token",
+      });
+    }
+
+    // Get user information and attach to request
+    const user = await authService.getUserById(payload.userId);
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    req.user = {
+      id: user.id,
+      contactNo: user.contactNo,
+      fullName: user.fullName,
+      address: user.address,
+    };
+
+    next();
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const optionalAuthMiddleware: RequestHandler = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = extractTokenFromHeader(authHeader);
+
+    if (token) {
+      const payload = verifyToken(token);
+      if (payload) {
+        const user = await authService.getUserById(payload.userId);
+        if (user) {
+          req.user = {
+            id: user.id,
+            contactNo: user.contactNo,
+            fullName: user.fullName,
+            address: user.address,
+          };
+        }
+      }
+    }
+
+    next();
+  } catch (error) {
+    // For optional auth, we continue even if there's an error
+    next();
+  }
+};
+
+export const adminAuthMiddleware: RequestHandler = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = extractTokenFromHeader(authHeader);
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Access token is required",
+      });
+    }
+
+    const payload = verifyToken(token);
+
+    if (!payload) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid or expired token",
+      });
+    }
+
+    const user = await authService.getUserById(payload.userId);
+
+    if (!user || user.role === "USER") {
+      return res.status(403).json({
+        success: false,
+        message: "Admin privileges required",
+      });
+    }
+
+    req.user = {
+      id: user.id,
+      contactNo: user.contactNo,
+      fullName: user.fullName,
+      address: user.address,
+    };
+    next();
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
