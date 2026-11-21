@@ -1,0 +1,41 @@
+# Dependencies
+**/node_modules/
+
+# Environment and secrets
+**/.env
+**/.env.local
+**/.env.*.local
+!.env.example
+
+# Build outputs
+**/dist/
+**/.next/
+**/out/
+**/build/
+**/coverage/
+**/*.tsbuildinfo
+
+# Server / uploads / generated
+server-main/uploads/
+server-main/src/generated/
+server-main/coverage/
+
+# IDE and OS
+**/.vscode/
+**/.DS_Store
+**/.vercel
+**/.pnp
+**/.pnp.*
+
+# Logs
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/pnpm-debug.log*
+
+# Python / model (optional local artifacts)
+**/__pycache__/
+**/.venv/
+**/*.pyc
+model-model/**/*.pt
+model-model/**/*.onnx

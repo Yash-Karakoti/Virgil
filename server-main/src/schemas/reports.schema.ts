@@ -6,7 +6,12 @@ export const CreateReportSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
   image: z.string().min(1, "Photo is required - please capture a photo"),
-  location: z.tuple([z.number(), z.number()]), // Allow any coordinates including [0,0]
+  location: z
+    .tuple([z.number(), z.number()])
+    .refine(
+      ([lat, lng]) => lat !== 0 || lng !== 0,
+      "Location is required — enable GPS or pick a point on the map"
+    ),
   category: z.enum([
     "ROAD_ISSUE",
     "GARBAGE",

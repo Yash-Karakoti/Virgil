@@ -3,6 +3,7 @@ import express from "express";
 import { env } from "./configs/env";
 import morgan from "morgan";
 import { router } from "./routes/index.route";
+import { securityHeaders } from "./middlewares/security.middleware";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import path from "path";
@@ -14,7 +15,11 @@ const __dirname = dirname(__filename);
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 const envVars = env.parse(process.env);
+
+app.use(securityHeaders);
 
 // CORS origins based on environment
 const allowedOrigins = [

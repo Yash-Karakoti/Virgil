@@ -32,7 +32,10 @@ export function SiteHeader() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
         <Logo />
 
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav
+          className="hidden items-center gap-1 md:flex"
+          aria-label="Main navigation"
+        >
           {navigation.map((item) => (
             <Button key={item.href} variant="ghost" asChild>
               <Link href={item.href}>{item.name}</Link>
@@ -75,7 +78,7 @@ export function SiteHeader() {
               <SheetHeader>
                 <SheetTitle className="font-heading text-lg">Menu</SheetTitle>
               </SheetHeader>
-              <nav className="flex flex-col gap-1 px-4">
+              <nav className="flex flex-col gap-1 px-4" aria-label="Mobile navigation">
                 {navigation.map((item) => (
                   <SheetClose key={item.href} asChild>
                     <Link

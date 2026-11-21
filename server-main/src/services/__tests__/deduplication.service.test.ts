@@ -47,20 +47,15 @@ describe("DeduplicationService", () => {
       });
 
       test("should return isDuplicate: false when nearby reports have different category", async () => {
-        // Arrange: Reports nearby but wrong category
-        const differentCategoryReport = mockDifferentCategoryReport();
-        (mockPrisma.$queryRaw as jest.Mock).mockResolvedValue([
-          differentCategoryReport,
-        ]);
+        // PostGIS query filters `category` in SQL — mismatches yield no rows
+        (mockPrisma.$queryRaw as jest.Mock).mockResolvedValue([]);
 
-        // Act
         const result = await service.checkForDuplicates(
           28.614,
           77.2091,
           "ROAD_ISSUE"
         );
 
-        // Assert
         expect(result.isDuplicate).toBe(false);
         expect(result.originalReport).toBeUndefined();
       });
@@ -303,7 +298,7 @@ describe("DeduplicationService", () => {
         });
       });
 
-      test("should create activity for original report with ADDED_DUPLICATE type", async () => {
+      test("should create activity for original report with DUPLICATE_MERGED type", async () => {
         // Act
         await service.mergeReports(
           duplicateReport.id,
@@ -329,8 +324,8 @@ describe("DeduplicationService", () => {
         );
 
         expect(originalActivity).toBeDefined();
-        expect(originalActivity.type).toBe("ADDED_DUPLICATE");
-        expect(originalActivity.message).toContain(duplicateReport.id);
+        expect(originalActivity.type).toBe("DUPLICATE_MERGED");
+        expect(originalActivity.content).toContain(duplicateReport.id);
         expect(originalActivity.createdById).toBe("user-123");
       });
 
@@ -361,7 +356,7 @@ describe("DeduplicationService", () => {
 
         expect(duplicateActivity).toBeDefined();
         expect(duplicateActivity.type).toBe("MARKED_AS_DUPLICATE");
-        expect(duplicateActivity.message).toContain(originalReport.id);
+        expect(duplicateActivity.content).toContain(originalReport.id);
         expect(duplicateActivity.createdById).toBe("user-123");
       });
 
